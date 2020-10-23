@@ -107,27 +107,39 @@ describe("ReduxFetchState", () => {
         error: null,
       });
     });
-    it("New state after dispatching loadFailure action", () => {
+    describe("New state after dispatching loadFailure action", () => {
       const occurredError = "something bad happened at api or something else";
-      const removeData = true;
       const state = {
         ...reduxFetchStateInitialValue,
         loading: true,
         loaded: false,
-        data: {
-          key: "value",
-        },
+        data: "something",
       };
-      const newStateReturnedFromReducer = reduxFetchState.reducer(
-        state,
-        reduxFetchState.actions.loadFailure(occurredError, removeData)
-      );
-      expect(newStateReturnedFromReducer).toEqual({
-        ...reduxFetchState.initialState,
-        loading: false,
-        loaded: false,
-        data: removeData ? null : state.data,
-        error: occurredError,
+      it("Should removeData and return new state with data: null", () => {
+        const newStateReturnedFromReducer = reduxFetchState.reducer(
+          state,
+          reduxFetchState.actions.loadFailure(occurredError, true)
+        );
+        expect(newStateReturnedFromReducer).toEqual({
+          ...state,
+          loading: false,
+          loaded: false,
+          error: occurredError,
+          data: null,
+        });
+      });
+      it("Should not removeData and return with state.data", () => {
+        const newStateReturnedFromReducer = reduxFetchState.reducer(
+          state,
+          reduxFetchState.actions.loadFailure(occurredError, false)
+        );
+        expect(newStateReturnedFromReducer).toEqual({
+          ...state,
+          loading: false,
+          loaded: false,
+          error: occurredError,
+          data: state.data,
+        });
       });
     });
     it("New state after dispatching resetCache action", () => {
