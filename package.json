@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest --watch",
+    "test:coverage": "jest --watch --coverage",
     "start": "babel src/ --out-dir build --watch"
   },
   "repository": {

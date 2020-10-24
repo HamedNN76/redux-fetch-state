@@ -1,13 +1,16 @@
-import {
-  reduxFetchActionTypesGenerator,
-  reduxFetchStateInitialValue,
-} from "./config";
+import { actionTypesGenerator } from "./utils";
 
 export class ReduxFetchState {
   constructor(name) {
     this.name = name;
-    this.initialState = reduxFetchStateInitialValue;
-    this.actionTypes = reduxFetchActionTypesGenerator(name);
+    this.initialState = {
+      loading: false,
+      loaded: false,
+      data: null,
+      error: null,
+      form: null,
+    };
+    this.actionTypes = actionTypesGenerator(name);
     this.actions = {
       load: (payload, isSilent) => ({
         type: this.actionTypes.load,
@@ -30,43 +33,73 @@ export class ReduxFetchState {
         type: this.actionTypes.resetForm,
       }),
     };
+    this.handlers = {
+      [this.actionTypes.load]: (state, action) => {
+        return {
+          ...state,
+          loading: !action.isSilent,
+          loaded: action.isSilent,
+          error: null,
+          form: action.payload,
+        };
+      },
+      [this.actionTypes.loadSuccess]: (state, action) => {
+        return {
+          ...state,
+          loading: false,
+          loaded: true,
+          form: null,
+          error: null,
+          data: action.payload,
+        };
+      },
+      [this.actionTypes.loadFailure]: (state, action) => {
+        return {
+          ...state,
+          loading: false,
+          loaded: false,
+          error: action.payload,
+          data: action.removeData ? null : state.data,
+        };
+      },
+      [this.actionTypes.resetCache]: () => this.initialState,
+      [this.actionTypes.resetForm]: (state) => {
+        return {
+          ...state,
+          form: null,
+        };
+      },
+    };
+    this.generateReducer();
+  }
+
+  generateReducer = () => {
     this.reducer = (state = this.initialState, action) => {
-      switch (action.type) {
-        case this.actionTypes.load:
-          return {
-            ...state,
-            loading: !action.isSilent,
-            loaded: action.isSilent,
-            error: null,
-            form: action.payload,
-          };
-        case this.actionTypes.loadSuccess:
-          return {
-            ...state,
-            loading: false,
-            loaded: true,
-            form: null,
-            error: null,
-            data: action.payload,
-          };
-        case this.actionTypes.loadFailure:
-          return {
-            ...state,
-            loading: false,
-            loaded: false,
-            error: action.payload,
-            data: action.removeData ? null : state.data,
-          };
-        case this.actionTypes.resetCache:
-          return this.initialState;
-        case this.actionTypes.resetForm:
-          return {
-            ...state,
-            form: null,
-          };
-        default:
-          return state;
+      if (this.handlers.hasOwnProperty(action.type)) {
+        return this.handlers[action.type](state, action);
+      } else {
+        return state;
       }
     };
-  }
+  };
+
+  addCustomAction = (actionKey, actionName, handler) => {
+    const actionType = `${this.name}/${actionName}`;
+    this.actionTypes = {
+      ...this.actionTypes,
+      [actionKey]: actionType,
+    };
+    this.actions = {
+      ...this.actions,
+      [actionKey]: (payload) => ({
+        type: this.actionTypes[actionKey],
+        payload,
+      }),
+    };
+    this.handlers = {
+      ...this.handlers,
+      [actionType]: handler,
+    };
+    this.generateReducer();
+  };
 }

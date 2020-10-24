@@ -1,10 +1,17 @@
 import { ReduxFetchState } from "../src/ReduxFetchState";
-import {
-  reduxFetchActionTypesGenerator,
-  reduxFetchStateInitialValue,
-} from "../src/config";
+import { actionTypesGenerator } from "../src/utils";
 
 describe("ReduxFetchState", () => {
+  const reduxFetchStateInitialValue = {
+    loading: false,
+    loaded: false,
+    data: null,
+    error: null,
+    form: null,
+  };
+  const name = "testName";
+  const reduxFetchState = new ReduxFetchState(name);
+
   it("Should be defined", () => {
     expect(ReduxFetchState).toBeDefined();
   });
@@ -14,21 +21,15 @@ describe("ReduxFetchState", () => {
     expect(reduxFetchState.initialState).toEqual(reduxFetchStateInitialValue);
   });
 
-  const name = "testName";
   it("Should pass name to class as first parameter", () => {
-    const reduxFetchState = new ReduxFetchState(name);
     expect(reduxFetchState.name).toBe(name);
   });
 
   it("Action types", () => {
-    const reduxFetchState = new ReduxFetchState(name);
-    expect(reduxFetchState.actionTypes).toEqual(
-      reduxFetchActionTypesGenerator(name)
-    );
+    expect(reduxFetchState.actionTypes).toEqual(actionTypesGenerator(name));
   });
 
   it("Action creators", () => {
-    const reduxFetchState = new ReduxFetchState(name);
     const payload = {};
     const isSilent = true;
     const removeData = true;
@@ -55,9 +56,111 @@ describe("ReduxFetchState", () => {
     });
   });
 
-  describe("Generate reducer", () => {
-    const reduxFetchState = new ReduxFetchState(name);
+  describe("Handlers object", () => {
+    it("Should have handlers object", () => {
+      expect(reduxFetchState.handlers).toBeDefined();
+    });
 
+    it("Should have load handler", () => {
+      const loadHandler =
+        reduxFetchState.handlers[reduxFetchState.actionTypes.load];
+      expect(typeof loadHandler).toBe("function");
+      const loadAction = {
+        type: reduxFetchState.actionTypes.load,
+        payload: "Some submitted form values",
+        isSilent: true,
+      };
+      expect(loadHandler(reduxFetchStateInitialValue, loadAction)).toEqual({
+        ...reduxFetchStateInitialValue,
+        loading: !loadAction.isSilent,
+        loaded: loadAction.isSilent,
+        error: null,
+        form: loadAction.payload,
+      });
+    });
+
+    it("Should have loadSuccess handler", () => {
+      const loadSuccessHandler =
+        reduxFetchState.handlers[reduxFetchState.actionTypes.loadSuccess];
+      expect(typeof loadSuccessHandler).toBe("function");
+      const loadSuccessAction = {
+        type: reduxFetchState.actionTypes.loadSuccess,
+        payload: "Some fetched data from api",
+      };
+      expect(
+        loadSuccessHandler(reduxFetchStateInitialValue, loadSuccessAction)
+      ).toEqual({
+        ...reduxFetchStateInitialValue,
+        loading: false,
+        loaded: true,
+        form: null,
+        error: null,
+        data: loadSuccessAction.payload,
+      });
+    });
+
+    it("Should have loadFailure handler", () => {
+      const loadFailureHandler =
+        reduxFetchState.handlers[reduxFetchState.actionTypes.loadFailure];
+      expect(typeof loadFailureHandler).toBe("function");
+      const loadFailureAction = {
+        type: reduxFetchState.actionTypes.loadFailure,
+        payload: "Some bad error happened",
+        removeData: true,
+      };
+      expect(
+        loadFailureHandler(reduxFetchStateInitialValue, loadFailureAction)
+      ).toEqual({
+        ...reduxFetchStateInitialValue,
+        loading: false,
+        loaded: false,
+        error: loadFailureAction.payload,
+        data: null,
+      });
+
+      loadFailureAction.removeData = false;
+      expect(
+        loadFailureHandler(reduxFetchStateInitialValue, loadFailureAction)
+      ).toEqual({
+        ...reduxFetchStateInitialValue,
+        loading: false,
+        loaded: false,
+        error: loadFailureAction.payload,
+        data: reduxFetchStateInitialValue.data,
+      });
+    });
+
+    it("Should handle resetCache handler", () => {
+      const resetCacheHandler =
+        reduxFetchState.handlers[reduxFetchState.actionTypes.resetCache];
+      expect(typeof resetCacheHandler).toBe("function");
+
+      const resetCacheAction = {
+        type: reduxFetchState.actionTypes.resetCache,
+      };
+      expect(
+        resetCacheHandler(reduxFetchStateInitialValue, resetCacheAction)
+      ).toEqual(reduxFetchStateInitialValue);
+    });
+
+    it("Should handle resetForm handler", () => {
+      const resetFormHandler =
+        reduxFetchState.handlers[reduxFetchState.actionTypes.resetForm];
+      expect(typeof resetFormHandler).toBe("function");
+
+      const resetFormAction = {
+        type: reduxFetchState.actionTypes.resetForm,
+      };
+      expect(
+        resetFormHandler(reduxFetchStateInitialValue, resetFormAction)
+      ).toEqual({
+        ...reduxFetchStateInitialValue,
+        form: null,
+      });
+    });
+  });
+
+  describe("Generate reducer", () => {
     it("Should be defined and be a function", () => {
       expect(reduxFetchState.reducer).toBeDefined();
       expect(typeof reduxFetchState.reducer).toBe("function");
@@ -168,6 +271,58 @@ describe("ReduxFetchState", () => {
       expect(newStateReturnedFromReducer).toEqual({
         ...state,
         form: null,
+      });
+    });
+  });
+
+  describe("Custom Action", () => {
+    const customActionKey = "customAction";
+    const customActionName = "CUSTOM_ACTION";
+    const customActionType = `${name}/${customActionName}`;
+    it("Should provide addCustomAction", () => {
+      expect(reduxFetchState.addCustomAction).toBeDefined();
+      expect(typeof reduxFetchState.addCustomAction).toBe("function");
+    });
+
+    it("Should add custom action to actionTypes", () => {
+      reduxFetchState.addCustomAction(customActionKey, customActionName);
+      expect(reduxFetchState.actionTypes[customActionKey]).toBe(
+        customActionType
+      );
+    });
+
+    it("Should add custom action creator to actions", () => {
+      reduxFetchState.addCustomAction(customActionKey, customActionName);
+      const action = reduxFetchState.actions[customActionKey];
+      const payload = "some payload";
+      expect(action).toBeDefined();
+      expect(typeof action).toBe("function");
+      expect(action(payload)).toEqual({
+        type: customActionType,
+        payload,
+      });
+    });
+
+    it("Should add handler", () => {
+      reduxFetchState.addCustomAction(
+        customActionKey,
+        customActionName,
+        (state, action) => {
+          return {
+            ...state,
+            testKey: action.payload,
+          };
+        }
+      );
+      const handler = reduxFetchState.handlers[customActionType];
+      expect(handler).toBeDefined();
+      expect(typeof handler).toBe("function");
+      const action = reduxFetchState.actions.customAction(
+        "custom action payload after handler added"
+      );
+      expect(handler(reduxFetchStateInitialValue, action)).toEqual({
+        ...reduxFetchStateInitialValue,
+        testKey: "custom action payload after handler added",
       });
     });
   });
