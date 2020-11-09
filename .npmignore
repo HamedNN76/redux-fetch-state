@@ -76,3 +76,5 @@ src/
 README.md
 
 .babelrc
+
+__test__/
