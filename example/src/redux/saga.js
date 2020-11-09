@@ -1,13 +1,11 @@
-import { all, takeEvery } from 'redux-saga/effects';
-
-import { REHYDRATE } from 'redux-persist';
+import { all, takeEvery } from "redux-saga/effects";
+import { REHYDRATE } from "redux-persist";
 import { watchRehydrate } from "./modules/rehydrate";
+import { getUsersActionTypes, watchGetUsers } from "./modules/getUsers";
 
-import { CHANGE_LANGUAGE, handleChangeLanguage } from './modules/language';
-
-export default function* root(store) {
+export default function* root() {
   yield all([
-    takeEvery(REHYDRATE, watchRehydrate, store),
-    takeEvery(CHANGE_LANGUAGE, handleChangeLanguage)
+    takeEvery(REHYDRATE, watchRehydrate),
+    takeEvery(getUsersActionTypes.load, watchGetUsers),
   ]);
 }

@@ -1,9 +1,10 @@
-import React from 'react';
+import React from "react";
+import Loading from "./Loading";
 
 export default function AppLoading() {
   return (
     <div>
-      <p>...Loading...</p>
+      <Loading loading />
     </div>
   );
 }

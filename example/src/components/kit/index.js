@@ -1,7 +1,7 @@
 import AppLoading from './AppLoading';
-import Text from './Text';
+import Loading from "./Loading";
 
 export {
   AppLoading,
-  Text
+  Loading,
 }

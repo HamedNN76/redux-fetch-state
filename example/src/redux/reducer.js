@@ -1,6 +1,6 @@
-import { combineReducers } from 'redux';
-import language from './modules/language';
+import { combineReducers } from "redux";
+import { getUsers } from "./modules/getUsers";
 
 export default combineReducers({
-  language
+  getUsers,
 });
