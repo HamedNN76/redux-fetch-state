@@ -218,3 +218,5 @@ export class ReduxFetchState<
     this.generateReducer();
   };
 }
+
+export default ReduxFetchState;
