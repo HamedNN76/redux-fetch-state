@@ -1,8 +1,9 @@
 {
   "name": "redux-fetch-state",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A simple class for handling state of fetch api",
-  "main": "index.js",
+  "main": "build/ReduxFetchState.js",
+  "types": "build/ReduxFetchState.d.ts",
   "scripts": {
     "test": "jest --watch",
     "test:coverage": "jest --watch --coverage",
