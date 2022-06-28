@@ -1,4 +1,4 @@
-export function actionTypesGenerator(name) {
+export function actionTypesGenerator(name: string) {
   return {
     load: `${name}/LOAD`,
     loadSuccess: `${name}/LOAD_SUCCESS`,
