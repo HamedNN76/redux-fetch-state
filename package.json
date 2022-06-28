@@ -1,6 +1,6 @@
 {
   "name": "redux-fetch-state",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "A simple class for handling state of fetch api",
   "main": "build/ReduxFetchState.js",
   "types": "build/ReduxFetchState.d.ts",
