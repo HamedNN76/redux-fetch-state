@@ -187,7 +187,7 @@ export class ReduxFetchState<
     };
   };
 
-  public addCustomAction = <Key extends keyof object>(
+  public addCustomAction = <Key extends keyof CustomActions>(
     actionKey: Key,
     actionName: string,
     handler: (
